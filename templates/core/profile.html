@@ -1,0 +1,80 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Profile Information -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                {% if profile.profile_picture %}
+                    <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" class="profile-picture mb-3">
+                {% else %}
+                    <img src="https://via.placeholder.com/150" alt="Default Profile Picture" class="profile-picture mb-3">
+                {% endif %}
+                <h3 class="card-title">{{ user.username }}</h3>
+                <p class="text-muted">Member since {{ profile.date_joined|date:"F Y" }}</p>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Profile Information</h5>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="profile_picture" class="form-label">Profile Picture</label>
+                        <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*">
+                    </div>
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">Bio</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="3">{{ profile.bio }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Update Profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- User's Wallpapers -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Your Wallpapers</h5>
+                <div class="row">
+                    {% for wallpaper in user_wallpapers %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100">
+                                <img src="{{ wallpaper.image.url }}" class="card-img-top wallpaper-image" alt="{{ wallpaper.title }}">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ wallpaper.title }}</h6>
+                                    <p class="card-text small">{{ wallpaper.description|truncatechars:100 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            {% if wallpaper.is_free %}
+                                                Free
+                                            {% else %}
+                                                ${{ wallpaper.price }}
+                                            {% endif %}
+                                        </small>
+                                        <small class="text-muted">{{ wallpaper.downloads }} downloads</small>
+                                    </div>
+                                    <div class="mt-2">
+                                        <a href="{% url 'wallpaper_detail' wallpaper.pk %}" class="btn btn-sm btn-primary">View Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12 text-center">
+                            <p>You haven't uploaded any wallpapers yet.</p>
+                            <a href="{% url 'upload_wallpaper' %}" class="btn btn-primary">Upload Your First Wallpaper</a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
