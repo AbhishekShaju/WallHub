@@ -34,7 +34,7 @@
                         {% if not has_purchased %}
                             <form method="post" action="{% url 'purchase_wallpaper' wallpaper.pk %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-success w-100">Buy for ${{ wallpaper.price }}</button>
+                                <button type="submit" class="btn btn-success w-100">Buy for ₹{{ wallpaper.price }}</button>
                             </form>
                         {% else %}
                             <a href="{% url 'download_wallpaper' wallpaper.pk %}" class="btn btn-primary w-100">Download</a>

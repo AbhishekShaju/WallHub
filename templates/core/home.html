@@ -20,7 +20,7 @@
             <div class="position-relative">
                 <img src="{{ wallpaper.image.url }}" class="card-img-top wallpaper-image" alt="{{ wallpaper.title }}">
                 {% if not wallpaper.is_free %}
-                    <div class="price-tag">${{ wallpaper.price }}</div>
+                    <div class="price-tag">₹{{ wallpaper.price }}</div>
                 {% else %}
                     <div class="price-tag">Free</div>
                 {% endif %}
