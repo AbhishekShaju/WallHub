@@ -1,50 +1,181 @@
 {% extends 'core/base.html' %}
+{% load static %}
+{% load custom_filters %}
 
 {% block title %}{{ wallpaper.title }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .wallpaper-container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .wallpaper-header {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .wallpaper-title {
+        font-size: 26px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    .wallpaper-meta {
+        color: #666;
+        font-size: 14px;
+    }
+    .wallpaper-image {
+        width: 100%;
+        max-height: 500px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .wallpaper-description {
+        color: #444;
+        line-height: 1.6;
+        margin-bottom: 20px;
+        width: 100%;
+    }
+    .wallpaper-price {
+        font-size: 20px;
+        font-weight: bold;
+        color: #4CAF50;
+        margin-bottom: 20px;
+    }
+    .purchase-button {
+        background: #4CAF50;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.3s;
+    }
+    .purchase-button:hover {
+        background: #45a049;
+    }
+    .purchase-button:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+    }
+    #payment-error {
+        display: none;
+        color: #dc3545;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <img src="{{ wallpaper.image.url }}" class="card-img-top" alt="{{ wallpaper.title }}">
-            <div class="card-body">
-                <h1 class="card-title">{{ wallpaper.title }}</h1>
-                <p class="card-text">{{ wallpaper.description }}</p>
-                <div class="d-flex justify-content-between align-items-center">
-                    <small class="text-muted">Uploaded by {{ wallpaper.uploaded_by.username }}</small>
-                    <small class="text-muted">{{ wallpaper.downloads }} downloads</small>
-                </div>
-            </div>
+<div class="wallpaper-container">
+    <div class="wallpaper-header">
+        <h1 class="wallpaper-title">{{ wallpaper.title }}</h1>
+        <div class="wallpaper-meta">
+            Uploaded by {{ wallpaper.uploaded_by.username }} on {{ wallpaper.upload_date|date:"F d, Y" }}
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Wallpaper Details</h5>
-                <ul class="list-unstyled">
-                    <li><strong>Price:</strong> {% if wallpaper.is_free %}Free{% else %}${{ wallpaper.price }}{% endif %}</li>
-                    <li><strong>Upload Date:</strong> {{ wallpaper.upload_date|date:"F d, Y" }}</li>
-                    <li><strong>Status:</strong> {% if wallpaper.is_approved %}Approved{% else %}Pending Approval{% endif %}</li>
-                </ul>
-                
-                {% if user.is_authenticated %}
-                    {% if wallpaper.is_free %}
-                        <a href="{% url 'download_wallpaper' wallpaper.pk %}" class="btn btn-primary w-100">Download</a>
-                    {% else %}
-                        {% if not has_purchased %}
-                            <form method="post" action="{% url 'purchase_wallpaper' wallpaper.pk %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-success w-100">Buy for ₹{{ wallpaper.price }}</button>
-                            </form>
-                        {% else %}
-                            <a href="{% url 'download_wallpaper' wallpaper.pk %}" class="btn btn-primary w-100">Download</a>
-                        {% endif %}
-                    {% endif %}
-                {% else %}
-                    <a href="{% url 'login' %}" class="btn btn-primary w-100">Login to Download</a>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+
+    <img src="{{ wallpaper.image.url }}" alt="{{ wallpaper.title }}" class="wallpaper-image">
+    
+    <p class="wallpaper-description">{{ wallpaper.description }}</p>
+
+    {% if not is_purchased and not wallpaper.is_free %}
+        <div class="wallpaper-price">₹{{ wallpaper.price }}</div>
+        <button class="purchase-button" onclick="initiatePayment()" id="buyButton">Purchase Now</button>
+        <div id="payment-error"></div>
+    {% elif is_purchased or wallpaper.is_free %}
+        <a href="{{ wallpaper.image.url }}" download class="purchase-button">Download Wallpaper</a>
+    {% endif %}
 </div>
-{% endblock %} 
+
+{% if not is_purchased and not wallpaper.is_free %}
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        function initiatePayment() {
+            const buyButton = document.getElementById('buyButton');
+            const errorDiv = document.getElementById('payment-error');
+            
+            buyButton.disabled = true;
+            buyButton.textContent = 'Processing...';
+            errorDiv.style.display = 'none';
+            
+            const options = {
+                "key": "{{ razorpay_key_id }}",
+                "amount": "{{ wallpaper.price|multiply:100 }}",
+                "currency": "INR",
+                "name": "Wallhub",
+                "description": "Purchase {{ wallpaper.title }}",
+                "handler": function (response) {
+                    verifyPayment(response);
+                },
+                "prefill": {
+                    "name": "{{ request.user.get_full_name }}",
+                    "email": "{{ request.user.email }}"
+                },
+                "theme": {
+                    "color": "#4CAF50"
+                },
+                "modal": {
+                    "ondismiss": function() {
+                        buyButton.disabled = false;
+                        buyButton.textContent = 'Purchase Now';
+                    }
+                }
+            };
+            
+            const rzp = new Razorpay(options);
+            rzp.open();
+        }
+
+        function verifyPayment(response) {
+            const buyButton = document.getElementById('buyButton');
+            const errorDiv = document.getElementById('payment-error');
+            
+            fetch("{% url 'payment_success' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_signature: response.razorpay_signature,
+                    wallpaper_id: {{ wallpaper.id }}
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.reload();
+                } else {
+                    errorDiv.textContent = data.error || 'Payment verification failed. Please try again.';
+                    errorDiv.style.display = 'block';
+                    buyButton.disabled = false;
+                    buyButton.textContent = 'Purchase Now';
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                errorDiv.textContent = 'An error occurred. Please try again.';
+                errorDiv.style.display = 'block';
+                buyButton.disabled = false;
+                buyButton.textContent = 'Purchase Now';
+            });
+        }
+    </script>
+{% endif %}
+{% endblock %}

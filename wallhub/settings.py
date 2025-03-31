@@ -140,3 +140,24 @@ SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+# Razorpay Settings
+RAZORPAY_KEY_ID = 'rzp_test_ey9Hv8aAJUkEjq'  # Replace with your actual test key ID from Razorpay dashboard
+RAZORPAY_KEY_SECRET = 'MWFAaM5dzex45mBaMCQ2M2TR'  # Replace with your actual test secret key from Razorpay dashboard
+RAZORPAY_TEST_MODE = True
+
+# CSRF Settings
+CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False
+CSRF_USE_SESSIONS = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'abhishekshajuts@gmail.com'  # Replace with your Gmail address
+EMAIL_HOST_PASSWORD = 'prbg dvce tjhn kzbk'  # Replace with your Gmail App Password
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

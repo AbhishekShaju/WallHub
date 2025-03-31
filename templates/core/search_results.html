@@ -1,0 +1,44 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Search Results{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">
+        {% if query %}
+            Search Results for "{{ query }}"
+        {% else %}
+            All Wallpapers
+        {% endif %}
+    </h2>
+
+    <div class="wallpaper-grid">
+        {% for wallpaper in wallpapers %}
+            <div class="card wallpaper-card">
+                <div class="position-relative">
+                    <img src="{{ wallpaper.image.url }}" class="card-img-top wallpaper-image" alt="{{ wallpaper.title }}">
+                    {% if not wallpaper.is_free %}
+                        <div class="price-tag">₹{{ wallpaper.price }}</div>
+                    {% else %}
+                        <div class="price-tag">Free</div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ wallpaper.title }}</h5>
+                    <p class="card-text">{{ wallpaper.description|truncatechars:100 }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">By {{ wallpaper.uploaded_by.username }}</small>
+                        <small class="text-muted">{{ wallpaper.downloads }} downloads</small>
+                    </div>
+                    <a href="{% url 'wallpaper_detail' wallpaper.pk %}" class="btn btn-primary btn-download">View Details</a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center">
+                <p>No wallpapers found matching your search.</p>
+                <a href="{% url 'home' %}" class="btn btn-primary">Back to Home</a>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

@@ -1,56 +1,155 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
 {% block title %}Upload Wallpaper{% endblock %}
 
+{% block extra_css %}
+<style>
+    .upload-container {
+        max-width: 800px;
+        margin: 30px auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    .upload-form {
+        padding: 20px;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    .form-control {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+    .form-control:focus {
+        border-color: #4CAF50;
+        outline: none;
+    }
+    textarea.form-control {
+        min-height: 100px;
+        resize: vertical;
+    }
+    .preview-image {
+        max-width: 300px;
+        max-height: 200px;
+        margin-top: 10px;
+        display: none;
+    }
+    .btn-upload {
+        background: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.3s;
+    }
+    .btn-upload:hover {
+        background: #45a049;
+    }
+    .price-toggle {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .price-toggle input[type="checkbox"] {
+        margin-right: 10px;
+    }
+    .price-field {
+        display: none;
+    }
+    .price-field.show {
+        display: block;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="text-center">Upload New Wallpaper</h3>
-                </div>
-                <div class="card-body">
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                    
-                    <form method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Title</label>
-                            <input type="text" class="form-control" id="title" name="title" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="price" class="form-label">Price (₹)</label>
-                            <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" value="0">
-                            <div class="form-text">Set to 0 for free wallpaper</div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="image" class="form-label">Wallpaper Image</label>
-                            <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
-                            <div class="form-text">Supported formats: JPG, PNG, JPEG</div>
-                        </div>
-                        
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Upload Wallpaper</button>
-                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
-                        </div>
-                    </form>
-                </div>
+<div class="upload-container">
+    <h2 class="text-center mb-4">Upload Wallpaper</h2>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
             </div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="POST" enctype="multipart/form-data" class="upload-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" class="form-control" id="title" name="title" required>
         </div>
-    </div>
+        
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea class="form-control" id="description" name="description" required></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="image">Wallpaper Image</label>
+            <input type="file" class="form-control" id="image" name="image" accept="image/*" required onchange="previewImage(this)">
+            <img id="preview" class="preview-image">
+        </div>
+        
+        <div class="price-toggle">
+            <input type="checkbox" id="is_free" name="is_free" checked onchange="togglePriceField()">
+            <label for="is_free">This wallpaper is free</label>
+        </div>
+        
+        <div class="form-group price-field" id="price_field">
+            <label for="price">Price (₹)</label>
+            <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" value="0">
+        </div>
+        
+        <div class="text-center">
+            <button type="submit" class="btn-upload">
+                <i class="fas fa-upload"></i> Upload Wallpaper
+            </button>
+        </div>
+    </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewImage(input) {
+    const preview = document.getElementById('preview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function togglePriceField() {
+    const isFree = document.getElementById('is_free').checked;
+    const priceField = document.getElementById('price_field');
+    const priceInput = document.getElementById('price');
+    
+    if (isFree) {
+        priceField.classList.remove('show');
+        priceInput.value = '0';
+    } else {
+        priceField.classList.add('show');
+    }
+}
+</script>
 {% endblock %} 
