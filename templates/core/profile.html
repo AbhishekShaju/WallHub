@@ -1,80 +1,328 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
-{% block title %}Profile{% endblock %}
+{% block title %}My Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+        max-width: 1200px;
+        margin: 30px auto;
+        padding: 20px;
+    }
+    .profile-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    .profile-picture {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 30px;
+    }
+    .profile-info {
+        flex: 1;
+    }
+    .profile-name {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    .profile-bio {
+        color: #666;
+        line-height: 1.6;
+    }
+    .profile-form {
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    .form-control {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    .btn-update {
+        background: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-update:hover {
+        background: #45a049;
+    }
+    .purchase-history {
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+    .purchase-history h3 {
+        margin-bottom: 20px;
+        color: #333;
+    }
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .table th,
+    .table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+    .table th {
+        background-color: #f8f9fa;
+        color: #333;
+    }
+    .btn-sm {
+        padding: 5px 10px;
+        border-radius: 4px;
+        text-decoration: none;
+        margin-right: 5px;
+    }
+    .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #0056b3;
+    }
+    .btn-success:hover {
+        background: #218838;
+    }
+    .profile-picture-container {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        margin-right: 30px;
+    }
+    .profile-picture-upload {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: rgba(0,0,0,0.5);
+        color: white;
+        padding: 5px;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    .profile-picture-upload input {
+        display: none;
+    }
+    .profile-picture-upload:hover {
+        background: rgba(0,0,0,0.7);
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <!-- Profile Information -->
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body text-center">
-                {% if profile.profile_picture %}
-                    <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" class="profile-picture mb-3">
-                {% else %}
-                    <img src="https://via.placeholder.com/150" alt="Default Profile Picture" class="profile-picture mb-3">
-                {% endif %}
-                <h3 class="card-title">{{ user.username }}</h3>
-                <p class="text-muted">Member since {{ profile.date_joined|date:"F Y" }}</p>
+<div class="container mt-4">
+    <div class="row">
+        <!-- Profile Information -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <form method="POST" enctype="multipart/form-data" id="profile-picture-form">
+                        {% csrf_token %}
+                        <div class="profile-picture-container">
+                            {% if profile.profile_picture %}
+                                <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" class="rounded-circle profile-picture" id="profile-picture-preview">
+                            {% else %}
+                                <img src="{% static 'images/default-profile.png' %}" alt="Default Profile Picture" class="rounded-circle profile-picture" id="profile-picture-preview">
+                            {% endif %}
+                            <label class="profile-picture-upload" for="id_profile_picture">
+                                <i class="fas fa-camera"></i>
+                                <input type="file" name="profile_picture" id="id_profile_picture" accept="image/*" onchange="previewProfilePicture(this)">
+                            </label>
+                        </div>
+                    </form>
+                    <h3>{{ user.username }}</h3>
+                    <p class="text-muted">{{ user.email }}</p>
+                    <p>{{ profile.bio }}</p>
+                    
+                    <!-- Earnings Section -->
+                    <div class="mt-3">
+                        <h4>Total Earnings</h4>
+                        <p class="h3 text-success">₹{{ earnings }}</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="card mt-4">
-            <div class="card-body">
-                <h5 class="card-title">Profile Information</h5>
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="profile_picture" class="form-label">Profile Picture</label>
-                        <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*">
-                    </div>
-                    <div class="mb-3">
-                        <label for="bio" class="form-label">Bio</label>
-                        <textarea class="form-control" id="bio" name="bio" rows="3">{{ profile.bio }}</textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Update Profile</button>
-                </form>
+        <!-- Main Content -->
+        <div class="col-md-8">
+            <!-- Profile Update Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Update Profile</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="id_bio">Bio</label>
+                            <textarea class="form-control" id="id_bio" name="bio" rows="3">{{ profile.bio }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="id_phone">Phone Number</label>
+                            <input type="text" class="form-control" id="id_phone" name="phone" value="{{ profile.phone }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="id_address">Address</label>
+                            <textarea class="form-control" id="id_address" name="address" rows="2">{{ profile.address }}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                    </form>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <!-- User's Wallpapers -->
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Your Wallpapers</h5>
-                <div class="row">
-                    {% for wallpaper in user_wallpapers %}
-                        <div class="col-md-6 mb-4">
-                            <div class="card h-100">
-                                <img src="{{ wallpaper.image.url }}" class="card-img-top wallpaper-image" alt="{{ wallpaper.title }}">
-                                <div class="card-body">
-                                    <h6 class="card-title">{{ wallpaper.title }}</h6>
-                                    <p class="card-text small">{{ wallpaper.description|truncatechars:100 }}</p>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">
-                                            {% if wallpaper.is_free %}
-                                                Free
-                                            {% else %}
-                                                ${{ wallpaper.price }}
-                                            {% endif %}
-                                        </small>
-                                        <small class="text-muted">{{ wallpaper.downloads }} downloads</small>
-                                    </div>
-                                    <div class="mt-2">
-                                        <a href="{% url 'wallpaper_detail' wallpaper.pk %}" class="btn btn-sm btn-primary">View Details</a>
+            <!-- Uploaded Wallpapers -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Your Uploaded Wallpapers</h4>
+                </div>
+                <div class="card-body">
+                    {% if user_wallpapers %}
+                        <div class="row">
+                            {% for wallpaper in user_wallpapers %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="card">
+                                        <img src="{{ wallpaper.image.url }}" class="card-img-top" alt="{{ wallpaper.title }}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ wallpaper.title }}</h5>
+                                            <p class="card-text">Price: ₹{{ wallpaper.price }}</p>
+                                            <p class="card-text">Downloads: {{ wallpaper.downloads }}</p>
+                                            <a href="{% url 'wallpaper_detail' wallpaper.pk %}" class="btn btn-primary">View Details</a>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            {% endfor %}
                         </div>
-                    {% empty %}
-                        <div class="col-12 text-center">
-                            <p>You haven't uploaded any wallpapers yet.</p>
-                            <a href="{% url 'upload_wallpaper' %}" class="btn btn-primary">Upload Your First Wallpaper</a>
+                    {% else %}
+                        <p>You haven't uploaded any wallpapers yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Purchased by Others -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Wallpapers Purchased by Others</h4>
+                </div>
+                <div class="card-body">
+                    {% if purchased_by_others %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Wallpaper</th>
+                                        <th>Purchased By</th>
+                                        <th>Price</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for purchase in purchased_by_others %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'wallpaper_detail' purchase.wallpaper.pk %}">
+                                                    {{ purchase.wallpaper.title }}
+                                                </a>
+                                            </td>
+                                            <td>{{ purchase.user.username }}</td>
+                                            <td>₹{{ purchase.wallpaper.price }}</td>
+                                            <td>{{ purchase.purchase_date|date:"M d, Y" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
-                    {% endfor %}
+                    {% else %}
+                        <p>No one has purchased your wallpapers yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Your Purchases -->
+            <div class="card">
+                <div class="card-header">
+                    <h4>Your Purchases</h4>
+                </div>
+                <div class="card-body">
+                    {% if purchases %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Wallpaper</th>
+                                        <th>Price</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for purchase in purchases %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'wallpaper_detail' purchase.wallpaper.pk %}">
+                                                    {{ purchase.wallpaper.title }}
+                                                </a>
+                                            </td>
+                                            <td>₹{{ purchase.wallpaper.price }}</td>
+                                            <td>{{ purchase.purchase_date|date:"M d, Y" }}</td>
+                                            <td>
+                                                <a href="{% url 'download_wallpaper' purchase.wallpaper.pk %}" class="btn btn-sm btn-success">Download</a>
+                                                <a href="{% url 'download_invoice' purchase.id %}" class="btn btn-sm btn-info">Invoice</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p>You haven't purchased any wallpapers yet.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function previewProfilePicture(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profile-picture-preview').src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+        document.getElementById('profile-picture-form').submit();
+    }
+}
+</script>
 {% endblock %} 

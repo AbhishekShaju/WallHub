@@ -3,9 +3,45 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div class="jumbotron text-center py-5 bg-light rounded">
-    <h1 class="display-4">Welcome to Wallhub</h1>
-    <p class="lead">Discover and share amazing wallpapers</p>
+<div id="mainCarousel" class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="0" class="active"></button>
+        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="1"></button>
+        <button type="button" data-bs-target="#mainCarousel" data-bs-slide-to="2"></button>
+    </div>
+    <div class="carousel-inner">
+        <div class="carousel-item active">
+            <img src="\static\images\pixelcut-export (3).jpeg" class="d-block w-100" alt="Nature Wallpaper">
+            <div class="carousel-caption">
+                <h1 class="display-4">Welcome to Wallhub</h1>
+                <p class="lead">Discover and share amazing wallpapers</p>
+            </div>
+        </div>
+        <div class="carousel-item">
+            <img src="\static\images\download (4).jpg" class="d-block w-100" alt="Abstract Wallpaper">
+            <div class="carousel-caption">
+                <h1 class="display-4">Premium Collection</h1>
+                <p class="lead">Explore our curated selection of high-quality wallpapers</p>
+            </div>
+        </div>
+        <div class="carousel-item">
+            <img src="static\images\ZEN.png" class="d-block w-100" alt="City Wallpaper">
+            <div class="carousel-caption">
+                
+            </div>
+        </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
+
+<div class="text-center mt-4">
     {% if not user.is_authenticated %}
         <div class="mt-4">
             <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-2">Sign Up</a>
@@ -14,16 +50,33 @@
     {% endif %}
 </div>
 
-<div class="wallpaper-grid mt-5">
+<!-- Filter Buttons -->
+<div class="filter-container text-center mt-5 mb-4">
+    <div class="btn-group" role="group" aria-label="Wallpaper filters">
+        <a href="{% url 'home' %}?filter=all" class="btn {% if current_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            <i class="fas fa-th-large me-1"></i> All Wallpapers
+        </a>
+        <a href="{% url 'home' %}?filter=free" class="btn {% if current_filter == 'free' %}btn-success{% else %}btn-outline-success{% endif %}">
+            <i class="fas fa-gift me-1"></i> Free Wallpapers
+        </a>
+        <a href="{% url 'home' %}?filter=paid" class="btn {% if current_filter == 'paid' %}btn-info{% else %}btn-outline-info{% endif %}">
+            <i class="fas fa-shopping-cart me-1"></i> Paid Wallpapers
+        </a>
+    </div>
+</div>
+
+<div class="wallpaper-grid mt-3">
     {% for wallpaper in wallpapers %}
         <div class="card wallpaper-card">
             <div class="position-relative">
                 <img src="{{ wallpaper.image.url }}" class="card-img-top wallpaper-image" alt="{{ wallpaper.title }}">
-                {% if not wallpaper.is_free %}
-                    <div class="price-tag">₹{{ wallpaper.price }}</div>
-                {% else %}
-                    <div class="price-tag">Free</div>
-                {% endif %}
+                <div class="price-tag {% if wallpaper.price == 0 %}free-tag{% else %}paid-tag{% endif %}">
+                    {% if wallpaper.price == 0 %}
+                        Free
+                    {% else %}
+                        ₹{{ wallpaper.price }}
+                    {% endif %}
+                </div>
             </div>
             <div class="card-body">
                 <h5 class="card-title">{{ wallpaper.title }}</h5>
@@ -41,4 +94,60 @@
         </div>
     {% endfor %}
 </div>
+
+<style>
+    .price-tag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-weight: bold;
+        color: white;
+        z-index: 1;
+    }
+    
+    .free-tag {
+        background-color: #28a745;
+    }
+    
+    .paid-tag {
+        background-color: #007bff;
+    }
+    
+    .wallpaper-card {
+        transition: transform 0.3s ease;
+    }
+    
+    .wallpaper-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .wallpaper-image {
+        height: 200px;
+        object-fit: cover;
+    }
+    
+    .btn-download {
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .filter-container {
+        margin-bottom: 20px;
+    }
+    
+    .filter-container .btn {
+        margin: 0 5px;
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-container .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
 {% endblock %} 

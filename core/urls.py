@@ -18,4 +18,6 @@ urlpatterns = [
     path('admin/login/', views.admin_login, name='admin_login'),
     path('password-reset/', views.password_reset_request, name='password_reset_request'),
     path('reset-password/', views.password_reset, name='password_reset'),
+    path('invoice/<int:purchase_id>/', views.view_invoice, name='view_invoice'),
+    path('invoice/<int:purchase_id>/download/', views.download_invoice, name='download_invoice'),
 ] 

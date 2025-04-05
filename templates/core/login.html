@@ -5,37 +5,290 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/login.css' %}">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+    .login-wrapper {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+    }
+    .card {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    .card:hover {
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    }
+    .card-header {
+        position: relative;
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        color: white;
+        padding: 1.5rem 1rem;
+    }
+    .card-header::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 15px;
+        background: linear-gradient(135deg, rgba(78, 115, 223, 0.1) 0%, rgba(34, 74, 190, 0.1) 100%);
+        filter: blur(10px);
+    }
+    .welcome-text {
+        font-size: 1.75rem;
+        font-weight: 600;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        border: none;
+        border-radius: 6px;
+        padding: 0.8rem 1rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 10px rgba(78, 115, 223, 0.2);
+        transition: all 0.2s;
+    }
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(78, 115, 223, 0.3);
+        background: linear-gradient(135deg, #5a7fe4 0%, #2a56d4 100%);
+    }
+    .form-control {
+        padding: 0.7rem 1rem;
+        border-radius: 6px;
+        border: 1px solid #e0e0e0;
+        background-color: #f9f9f9;
+        transition: all 0.2s;
+    }
+    .form-control:focus {
+        background-color: #fff;
+        border-color: #a3b9ef;
+        box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.15);
+    }
+    .forgot-link {
+        color: #4e73df;
+        transition: all 0.2s;
+    }
+    .forgot-link:hover {
+        color: #224abe;
+        text-decoration: none;
+    }
+    .signup-link {
+        color: #4e73df;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    .signup-link:hover {
+        color: #224abe;
+    }
+    .card-body {
+        padding: 2rem;
+    }
+    .card-footer {
+        background-color: #f8f9fc;
+        border-top: 1px solid rgba(0,0,0,0.05);
+        padding: 1rem;
+    }
+    /* Animated element */
+    .login-decoration {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        z-index: 1;
+    }
+    .login-decoration::before {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: 20px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.08);
+    }
+    
+    /* I am not a robot checkbox styles */
+    .robot-checkbox-container {
+        margin: 15px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .robot-checkbox {
+        position: relative;
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        margin-right: 10px;
+    }
+    
+    .robot-checkbox input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .robot-checkmark {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 24px;
+        width: 24px;
+        background-color: #f9f9f9;
+        border: 2px solid #e0e0e0;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+    
+    .robot-checkbox:hover input ~ .robot-checkmark {
+        border-color: #4e73df;
+    }
+    
+    .robot-checkbox input:checked ~ .robot-checkmark {
+        background-color: #4e73df;
+        border-color: #4e73df;
+    }
+    
+    .robot-checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 8px;
+        top: 4px;
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+    
+    .robot-checkbox input:checked ~ .robot-checkmark:after {
+        display: block;
+        animation: checkmark 0.3s ease-in-out;
+    }
+    
+    @keyframes checkmark {
+        0% {
+            opacity: 0;
+            transform: rotate(45deg) scale(0.5);
+        }
+        100% {
+            opacity: 1;
+            transform: rotate(45deg) scale(1);
+        }
+    }
+    
+    .robot-label {
+        font-size: 14px;
+        color: #666;
+        display: flex;
+        align-items: center;
+    }
+    
+    .robot-icon {
+        margin-right: 5px;
+        color: #4e73df;
+        animation: robot-pulse 2s infinite;
+    }
+    
+    @keyframes robot-pulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
+<div class="container login-wrapper">
+    <div class="row justify-content-center w-100">
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="text-center">Login</h3>
+            <div class="card shadow-lg border-0">
+                <div class="card-header text-center position-relative">
+                    <div class="login-decoration"></div>
+                    <h3 class="welcome-text mb-0">Welcome Back</h3>
+                    <p class="text-white-50 mb-0">Sign in to continue to your account</p>
                 </div>
+                
                 <div class="card-body">
                     {% if messages %}
                         {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
                                 {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         {% endfor %}
                     {% endif %}
-                    <form method="POST">
+                    
+                    <form method="POST" class="needs-validation" id="login-form">
                         {% csrf_token %}
-                        {{ form.as_p }}
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Login</button>
+                        <div class="form-floating mb-3">
+                            {{ form.as_p }}
+                        </div>
+                        
+                        <div class="robot-checkbox-container">
+                            <label class="robot-checkbox">
+                                <input type="checkbox" id="robot-checkbox" name="robot-checkbox">
+                                <span class="robot-checkmark"></span>
+                            </label>
+                            <span class="robot-label">
+                                <i class="fas fa-robot robot-icon"></i> I am not a robot
+                            </span>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg" id="login-button" disabled>
+                                <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                            </button>
                         </div>
                     </form>
-                    <div class="text-center mt-3">
-                        <a href="{% url 'password_reset_request' %}">Forgot Password?</a>
+                    
+                    <div class="text-center mt-4">
+                        <a href="{% url 'password_reset_request' %}" class="forgot-link">
+                            <i class="fas fa-key me-1"></i>Forgot Password?
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="card-footer text-center py-3">
+                    <div>
+                        Don't have an account? <a href="{% url 'register' %}" class="signup-link text-decoration-none">Sign up now</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const robotCheckbox = document.getElementById('robot-checkbox');
+        const loginButton = document.getElementById('login-button');
+        
+        // Initially disable the login button
+        loginButton.disabled = true;
+        
+        // Enable/disable login button based on checkbox state
+        robotCheckbox.addEventListener('change', function() {
+            loginButton.disabled = !this.checked;
+        });
+    });
+</script>
+{% endblock %}

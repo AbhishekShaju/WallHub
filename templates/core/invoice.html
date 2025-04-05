@@ -19,25 +19,34 @@
         padding-bottom: 20px;
         border-bottom: 2px solid #eee;
     }
-    .invoice-header h2 {
-        color: #2c3e50;
+    .invoice-title {
+        font-size: 24px;
+        color: #333;
         margin-bottom: 10px;
     }
-    .invoice-details {
+    .invoice-subtitle {
+        color: #666;
+        font-size: 16px;
+    }
+    .invoice-info {
         display: flex;
         justify-content: space-between;
         margin-bottom: 30px;
     }
-    .invoice-info {
+    .invoice-details {
         flex: 1;
     }
-    .invoice-info p {
+    .invoice-details p {
         margin: 5px 0;
+        color: #666;
+    }
+    .invoice-details strong {
+        color: #333;
     }
     .invoice-table {
         width: 100%;
         border-collapse: collapse;
-        margin: 20px 0;
+        margin-bottom: 30px;
     }
     .invoice-table th,
     .invoice-table td {
@@ -47,38 +56,40 @@
     }
     .invoice-table th {
         background-color: #f8f9fa;
-        font-weight: bold;
+        color: #333;
     }
     .invoice-total {
         text-align: right;
         margin-top: 20px;
-        padding-top: 20px;
-        border-top: 2px solid #eee;
     }
-    .invoice-total h3 {
-        color: #2c3e50;
-        margin-bottom: 10px;
+    .invoice-total p {
+        margin: 5px 0;
+        font-size: 16px;
+    }
+    .invoice-total .total-amount {
+        font-size: 20px;
+        font-weight: bold;
+        color: #4CAF50;
     }
     .invoice-footer {
-        text-align: center;
         margin-top: 30px;
         padding-top: 20px;
-        border-top: 1px solid #eee;
-        font-size: 0.9em;
+        border-top: 2px solid #eee;
+        text-align: center;
         color: #666;
     }
-    .download-btn {
+    .download-button {
         display: inline-block;
+        background: #4CAF50;
+        color: white;
         padding: 10px 20px;
-        background: #2c3e50;
-        color: white;
-        text-decoration: none;
         border-radius: 5px;
+        text-decoration: none;
         margin-top: 20px;
+        transition: background 0.3s;
     }
-    .download-btn:hover {
-        background: #34495e;
-        color: white;
+    .download-button:hover {
+        background: #45a049;
     }
 </style>
 {% endblock %}
@@ -86,22 +97,18 @@
 {% block content %}
 <div class="invoice-container">
     <div class="invoice-header">
-        <h2>Purchase Invoice</h2>
-        <p>Invoice #{{ purchase.id }}</p>
+        <h1 class="invoice-title">Purchase Invoice</h1>
+        <p class="invoice-subtitle">Thank you for your purchase!</p>
     </div>
 
-    <div class="invoice-details">
-        <div class="invoice-info">
-            <h4>Customer Details</h4>
-            <p><strong>Name:</strong> {{ purchase.user.username }}</p>
-            <p><strong>Email:</strong> {{ purchase.user.email }}</p>
-            <p><strong>Date:</strong> {{ purchase.purchase_date|date:"F d, Y" }}</p>
+    <div class="invoice-info">
+        <div class="invoice-details">
+            <p><strong>Invoice Date:</strong> {{ purchase.purchase_date|date:"F d, Y" }}</p>
+            <p><strong>Transaction ID:</strong> {{ purchase.transaction_id }}</p>
         </div>
-        <div class="invoice-info">
-            <h4>Wallhub</h4>
-            <p>123 Wall Street</p>
-            <p>Digital City, DC 12345</p>
-            <p>support@wallhub.com</p>
+        <div class="invoice-details">
+            <p><strong>Customer Name:</strong> {{ request.user.get_full_name }}</p>
+            <p><strong>Email:</strong> {{ request.user.email }}</p>
         </div>
     </div>
 
@@ -116,24 +123,21 @@
         <tbody>
             <tr>
                 <td>{{ purchase.wallpaper.title }}</td>
-                <td>Digital Wallpaper</td>
+                <td>{{ purchase.wallpaper.description|truncatewords:20 }}</td>
                 <td>₹{{ purchase.wallpaper.price }}</td>
             </tr>
         </tbody>
     </table>
 
     <div class="invoice-total">
-        <h3>Total Amount: ₹{{ purchase.wallpaper.price }}</h3>
-        <p>Transaction ID: {{ purchase.transaction_id }}</p>
+        <p>Subtotal: ₹{{ purchase.wallpaper.price }}</p>
+        <p>Tax (0%): ₹0</p>
+        <p class="total-amount">Total Amount: ₹{{ purchase.wallpaper.price }}</p>
     </div>
 
     <div class="invoice-footer">
-        <p>Thank you for your purchase!</p>
-        <p>This is a computer-generated invoice and does not require a signature.</p>
-    </div>
-
-    <div class="text-center">
-        <a href="{% url 'download_invoice' purchase.id %}" class="download-btn">
+        <p>This is a computer-generated invoice. No signature is required.</p>
+        <a href="{% url 'download_invoice' purchase.id %}" class="download-button">
             <i class="fas fa-download"></i> Download Invoice
         </a>
     </div>

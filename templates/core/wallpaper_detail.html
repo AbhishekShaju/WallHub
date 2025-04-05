@@ -2,7 +2,7 @@
 {% load static %}
 {% load custom_filters %}
 
-{% block title %}{{ wallpaper.title }}{% endblock %}
+{% block title %}{{ wallpaper.title }} - WallHub{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -76,106 +76,195 @@
         color: #dc3545;
         margin-top: 10px;
     }
+    .similar-wallpaper-card {
+        margin-bottom: 15px;
+        transition: transform 0.3s ease;
+    }
+    .similar-wallpaper-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .similar-wallpaper-image {
+        height: 120px;
+        object-fit: cover;
+    }
+    .similar-wallpaper-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .similar-wallpaper-price {
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .similar-wallpaper-free {
+        color: #28a745;
+    }
+    .similar-wallpaper-paid {
+        color: #007bff;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="wallpaper-container">
-    <div class="wallpaper-header">
-        <h1 class="wallpaper-title">{{ wallpaper.title }}</h1>
-        <div class="wallpaper-meta">
-            Uploaded by {{ wallpaper.uploaded_by.username }} on {{ wallpaper.upload_date|date:"F d, Y" }}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <img src="{{ wallpaper.image.url }}" class="card-img-top" alt="{{ wallpaper.title }}">
+                <div class="card-body">
+                    <h2 class="card-title">{{ wallpaper.title }}</h2>
+                    <p class="card-text">{{ wallpaper.description }}</p>
+                    <p class="text-muted">Uploaded by: {{ wallpaper.uploaded_by.username }}</p>
+                    <p class="text-muted">Upload date: {{ wallpaper.upload_date|date:"F j, Y" }}</p>
+                    
+                    {% if wallpaper.price > 0 %}
+                        <p class="h4 text-primary">Price: ₹{{ wallpaper.price }}</p>
+                    {% else %}
+                        <p class="h4 text-success">Free Download</p>
+                    {% endif %}
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if is_purchased or wallpaper.price == 0 or wallpaper.uploaded_by == user %}
+                        <a href="{% url 'download_wallpaper' wallpaper.pk %}" class="btn btn-success">
+                            <i class="fas fa-download"></i> Download Wallpaper
+                        </a>
+                    {% else %}
+                        {% if user.is_authenticated %}
+                            {% if razorpay_key_id and razorpay_order %}
+                                <button id="rzp-button1" class="btn btn-primary">
+                                    <i class="fas fa-shopping-cart"></i> Purchase Now (₹{{ wallpaper.price }})
+                                </button>
+                                <div id="payment-message" class="mt-2"></div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Payment system is currently unavailable. Please try again later.
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt"></i> Login to Purchase
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Similar Wallpapers</h4>
+                </div>
+                <div class="card-body">
+                    {% if similar_wallpapers %}
+                        {% for similar in similar_wallpapers %}
+                            <div class="card similar-wallpaper-card">
+                                <div class="row g-0">
+                                    <div class="col-md-4">
+                                        <img src="{{ similar.image.url }}" class="img-fluid rounded-start similar-wallpaper-image" alt="{{ similar.title }}">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="card-body">
+                                            <h5 class="similar-wallpaper-title">{{ similar.title }}</h5>
+                                            <p class="similar-wallpaper-price {% if similar.price == 0 %}similar-wallpaper-free{% else %}similar-wallpaper-paid{% endif %}">
+                                                {% if similar.price == 0 %}
+                                                    Free
+                                                {% else %}
+                                                    ₹{{ similar.price }}
+                                                {% endif %}
+                                            </p>
+                                            <a href="{% url 'wallpaper_detail' similar.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No similar wallpapers found.</p>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
-
-    <img src="{{ wallpaper.image.url }}" alt="{{ wallpaper.title }}" class="wallpaper-image">
-    
-    <p class="wallpaper-description">{{ wallpaper.description }}</p>
-
-    {% if not is_purchased and not wallpaper.is_free %}
-        <div class="wallpaper-price">₹{{ wallpaper.price }}</div>
-        <button class="purchase-button" onclick="initiatePayment()" id="buyButton">Purchase Now</button>
-        <div id="payment-error"></div>
-    {% elif is_purchased or wallpaper.is_free %}
-        <a href="{{ wallpaper.image.url }}" download class="purchase-button">Download Wallpaper</a>
-    {% endif %}
 </div>
 
-{% if not is_purchased and not wallpaper.is_free %}
+{% if razorpay_key_id and razorpay_order %}
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
-        function initiatePayment() {
-            const buyButton = document.getElementById('buyButton');
-            const errorDiv = document.getElementById('payment-error');
-            
-            buyButton.disabled = true;
-            buyButton.textContent = 'Processing...';
-            errorDiv.style.display = 'none';
-            
-            const options = {
-                "key": "{{ razorpay_key_id }}",
-                "amount": "{{ wallpaper.price|multiply:100 }}",
-                "currency": "INR",
-                "name": "Wallhub",
-                "description": "Purchase {{ wallpaper.title }}",
-                "handler": function (response) {
-                    verifyPayment(response);
-                },
-                "prefill": {
-                    "name": "{{ request.user.get_full_name }}",
-                    "email": "{{ request.user.email }}"
-                },
-                "theme": {
-                    "color": "#4CAF50"
-                },
-                "modal": {
-                    "ondismiss": function() {
-                        buyButton.disabled = false;
-                        buyButton.textContent = 'Purchase Now';
-                    }
+    document.addEventListener('DOMContentLoaded', function() {
+        var options = {
+            "key": "{{ razorpay_key_id }}",
+            "amount": "{{ razorpay_order.amount }}",
+            "currency": "{{ razorpay_order.currency }}",
+            "name": "WallHub",
+            "description": "{{ wallpaper.title }}",
+            "order_id": "{{ razorpay_order.id }}",
+            "handler": function (response) {
+                // Show processing message
+                document.getElementById('payment-message').innerHTML = 
+                    '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Processing payment...</div>';
+                
+                // Create a form to submit the payment details
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{% url 'payment_success' %}";
+                
+                // Add CSRF token
+                var csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = 'csrfmiddlewaretoken';
+                csrf.value = '{{ csrf_token }}';
+                form.appendChild(csrf);
+                
+                // Add payment details
+                var fields = {
+                    'razorpay_payment_id': response.razorpay_payment_id,
+                    'razorpay_order_id': response.razorpay_order_id,
+                    'razorpay_signature': response.razorpay_signature,
+                    'wallpaper_id': '{{ wallpaper.id }}'
+                };
+                
+                for (var key in fields) {
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = fields[key];
+                    form.appendChild(input);
                 }
-            };
-            
-            const rzp = new Razorpay(options);
+                
+                // Submit the form
+                document.body.appendChild(form);
+                form.submit();
+            },
+            "prefill": {
+                "name": "{{ user.get_full_name|default:user.username }}",
+                "email": "{{ user.email }}"
+            },
+            "theme": {
+                "color": "#4CAF50"
+            }
+        };
+        
+        var rzp = new Razorpay(options);
+        
+        document.getElementById('rzp-button1').onclick = function(e) {
             rzp.open();
+            e.preventDefault();
         }
-
-        function verifyPayment(response) {
-            const buyButton = document.getElementById('buyButton');
-            const errorDiv = document.getElementById('payment-error');
-            
-            fetch("{% url 'payment_success' %}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRFToken": "{{ csrf_token }}"
-                },
-                body: JSON.stringify({
-                    razorpay_payment_id: response.razorpay_payment_id,
-                    razorpay_order_id: response.razorpay_order_id,
-                    razorpay_signature: response.razorpay_signature,
-                    wallpaper_id: {{ wallpaper.id }}
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    window.location.reload();
-                } else {
-                    errorDiv.textContent = data.error || 'Payment verification failed. Please try again.';
-                    errorDiv.style.display = 'block';
-                    buyButton.disabled = false;
-                    buyButton.textContent = 'Purchase Now';
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                errorDiv.textContent = 'An error occurred. Please try again.';
-                errorDiv.style.display = 'block';
-                buyButton.disabled = false;
-                buyButton.textContent = 'Purchase Now';
-            });
-        }
+    });
     </script>
 {% endif %}
 {% endblock %}
